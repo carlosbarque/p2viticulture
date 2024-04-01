@@ -18,7 +18,7 @@ import javax.persistence.Table;
 @Table(name= "campo")
 public class Campo {
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name = "id", unique = true, nullable = true)
 	private int id_campo;
 
@@ -32,7 +32,8 @@ public class Campo {
 	
 	public Campo() {}
 
-	public Campo(Bodega b) {
+	public Campo(Bodega b, int id) {
+		this.id_campo=id;
 		this.bodega = b;
 		this.vids = new ArrayList<>();
 	}

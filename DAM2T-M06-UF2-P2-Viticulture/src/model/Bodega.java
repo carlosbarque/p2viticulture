@@ -18,8 +18,8 @@ import javax.persistence.Table;
 public class Bodega {
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name = "id", unique = true, nullable = true)
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name = "id", unique = true, nullable = true )
 	private int id_bodega;
 	
 	@Column(name = "nombre")
@@ -31,7 +31,8 @@ public class Bodega {
 	
 	public Bodega() {}
 	
-	public Bodega(String nombre) {
+	public Bodega(String nombre, int id) {
+		this.id_bodega=id;
 		this.nombre = nombre;
 		this.vids = new ArrayList<>();
 	}

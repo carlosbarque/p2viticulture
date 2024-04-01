@@ -13,7 +13,7 @@ import utils.TipoVid;
 @Table(name= "vid")
 public class Vid {
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name = "id", unique = true, nullable = true)
 	private int id;
 	@Column(name = "tipo_vid", nullable = true)
@@ -23,7 +23,8 @@ public class Vid {
 	
 	public Vid() {}
 		
-	public Vid(TipoVid vid, int cantidad) {
+	public Vid(TipoVid vid, int cantidad, int id) {
+		this.id=id;
 		this.vid = vid;
 		this.cantidad = cantidad;
 	}

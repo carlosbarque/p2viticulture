@@ -23,6 +23,11 @@ public class Manager {
 	private Bodega b;
 	private Campo c;
 
+	
+	private int bodegaId=1;
+	private int campoId=1;
+	private int vidId=1;
+	
 	private Manager () {
 		this.entradas = new ArrayList<>();
 	}
@@ -86,7 +91,7 @@ public class Manager {
 	}
 
 	private void addVid(String[] split) {
-		Vid v = new Vid(TipoVid.valueOf(split[1].toUpperCase()), Integer.parseInt(split[2]));
+		Vid v = new Vid(TipoVid.valueOf(split[1].toUpperCase()), Integer.parseInt(split[2]), vidId);
 		tx = session.beginTransaction();
 		session.save(v);
 		
@@ -98,7 +103,8 @@ public class Manager {
 	}
 
 	private void addCampo(String[] split) {
-		c = new Campo(b);
+		c = new Campo(b,campoId);
+		campoId++;
 		tx = session.beginTransaction();
 		
 		int id = (Integer) session.save(c);
@@ -108,11 +114,12 @@ public class Manager {
 	}
 
 	private void addBodega(String[] split) {
-		b = new Bodega(split[1]);
+		b = new Bodega(split[1], bodegaId);
 		tx = session.beginTransaction();
 		
 		int id = (Integer) session.save(b);
-		b = session.get(Bodega.class, id);
+		b = session.get(Bodega.class, bodegaId);
+		
 		
 		tx.commit();
 		
