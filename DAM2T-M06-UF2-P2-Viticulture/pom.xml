@@ -22,6 +22,12 @@
 			<artifactId>hibernate-core</artifactId>
 			<version>5.4.10.Final</version>
 		</dependency>
+		
+	<dependency>
+    <groupId>org.mongodb</groupId>
+    <artifactId>mongo-java-driver</artifactId>
+    <version>3.12.10</version> <!-- Asegúrate de utilizar la última versión disponible -->
+</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>

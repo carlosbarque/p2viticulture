@@ -2,32 +2,41 @@ package manager;
 import java.util.ArrayList;
 import java.util.List;
 
-
+import org.bson.Document;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.query.Query;
 
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+
 import model.Bodega;
 import model.Campo;
 import model.Entrada;
+import model.Grapevine;
+import model.Inputdata;
 import model.Vid;
+import model.Vineyard;
+import model.Winery;
 import utils.TipoVid;
 
 public class Manager {
 	private static Manager manager;
-	private ArrayList<Entrada> entradas;
+	private ArrayList<Inputdata> entradas;
 	private Session session;
 	private Transaction tx;
 	private Bodega b;
 	private Campo c;
+	MongoCollection<Document> collection;
 
 	
 	private int bodegaId=1;
 	private int campoId=1;
 	private int vidId=1;
-	
+	daoDbImplMongo mongodb= new daoDbImplMongo();
+	MongoDatabase database;
 	private Manager () {
 		this.entradas = new ArrayList<>();
 	}
@@ -40,34 +49,36 @@ public class Manager {
 	}
 	
 	private void createSession() {
-		org.hibernate.SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
-    	session = sessionFactory.openSession();
+		
+		mongodb.connect();
+		database= mongodb.database;
+		this.entradas= mongodb.getInputData();
+		System.out.println(entradas);
 	}
 
 	public void init() {
 		createSession();
-		getEntrada();
 		manageActions();
-		showAllCampos();
-		session.close();
+		
+	
 	}
 
 	private void manageActions() {
-		for (Entrada entrada : this.entradas) {
+		for (Inputdata entrada : this.entradas) {
 			try {
-				System.out.println(entrada.getInstruccion());
-				switch (entrada.getInstruccion().toUpperCase().split(" ")[0]) {
+				System.out.println(entrada.getAction());
+				switch (entrada.getAction().toUpperCase().split(" ")[0]) {
 					case "B":
-						addBodega(entrada.getInstruccion().split(" "));
+						addWinery(entrada.getAction().split(" "));
 						break;
 					case "C":
-						addCampo(entrada.getInstruccion().split(" "));
+						addVineyard(entrada.getAction().split(" "));
 						break;
 					case "V":
-						addVid(entrada.getInstruccion().split(" "));
+						addGrapevine(entrada.getAction().split(" "));
 						break;
 					case "#":
-						vendimia();
+						//vendimia();
 						break;
 					default:
 						System.out.println("Instruccion incorrecta");
@@ -80,6 +91,7 @@ public class Manager {
 			}
 		}
 	}
+	
 
 	private void vendimia() {
 		this.b.getVids().addAll(this.c.getVids());
@@ -90,39 +102,42 @@ public class Manager {
 		tx.commit();
 	}
 
-	private void addVid(String[] split) {
-		Vid v = new Vid(TipoVid.valueOf(split[1].toUpperCase()), Integer.parseInt(split[2]), vidId);
-		tx = session.beginTransaction();
-		session.save(v);
+	public void addWinery (String [] split) {
+		collection =database.getCollection("wineries");
 		
-		c.addVid(v);
-		session.save(c);
-		
-		tx.commit();
-		
+		Document document = new Document().append("name", split[1]);
+		collection.insertOne(document);
 	}
-
-	private void addCampo(String[] split) {
-		c = new Campo(b,campoId);
-		campoId++;
-		tx = session.beginTransaction();
+	
+	
+	public void addVineyard(String [] split) {
+		collection =database.getCollection("wineries");
+		Document lastWinery=collection.find().sort(new Document("id", -1)).first();
 		
-		int id = (Integer) session.save(c);
-		c = session.get(Campo.class, id);
 		
-		tx.commit();
+		
+		collection =database.getCollection("vineyards");
+		Document document = new Document().append("name", lastWinery.getObjectId("_id")).append("collected", false)
+		.append("winery", lastWinery);
+		
+		collection.insertOne(document);
 	}
-
-	private void addBodega(String[] split) {
-		b = new Bodega(split[1], bodegaId);
-		tx = session.beginTransaction();
+	
+	public void addGrapevine (String [] split) {
+		collection = database.getCollection("vineyards");
+		Document lastVineyard = collection.find().sort(new Document("id", -1)).first();
 		
-		int id = (Integer) session.save(b);
-		b = session.get(Bodega.class, bodegaId);
+		collection =database.getCollection("grapevines");
+		Document document = new Document().append("type", split[1].toString()).append("quantity", split[2]).append("vineyard", lastVineyard);
+		collection.insertOne(document);
+		
+		Document document2 = new Document().append("type", split[1].toString()).append("quantity", split[2]);
+		collection = database.getCollection("vineyards");
 		
 		
-		tx.commit();
 		
+		Document update = new Document ("$push", new Document("grapevines", document2));
+		collection.updateOne(document2, update);
 	}
 
 	private void getEntrada() {
